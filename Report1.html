@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -69,6 +103,25 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 13,380 × 14
+   country   year parent_company empty  hdpe  ldpe     o   pet    pp    ps   pvc
+   &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+ 1 Argenti…  2019 Grand Total        0   215    55   607  1376   281   116    18
+ 2 Argenti…  2019 Unbranded          0   155    50   532   848   122   114    17
+ 3 Argenti…  2019 The Coca-Cola…     0     0     0     0   222    35     0     0
+ 4 Argenti…  2019 Secco              0     0     0     0    39     4     0     0
+ 5 Argenti…  2019 Doble Cola         0     0     0     0    38     0     0     0
+ 6 Argenti…  2019 Pritty             0     0     0     0    22     7     0     0
+ 7 Argenti…  2019 PepsiCo            0     0     0     0    21     6     0     0
+ 8 Argenti…  2019 Casoni             0     0     0     0    26     0     0     0
+ 9 Argenti…  2019 Villa Del Sur…     0     0     0     0    19     1     0     0
+10 Argenti…  2019 Manaos             0     0     0     0    14     4     0     0
+# ℹ 13,370 more rows
+# ℹ 3 more variables: grand_total &lt;dbl&gt;, num_events &lt;dbl&gt;, volunteers &lt;dbl&gt;</code></pre>
+</div>
+</div>
 <section id="context-of-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="context-of-the-data">Context of the Data</h2>
 <p>This data comes from Break Free from Plastic, a global organization that runs yearly brand audits where volunteers around the world collect plastic waste. The dataset contains 2019 and 2020 data, with the following variables: country, year, parent_company, empty, hdpe, idpe, o, pet, pp, ps, pvc, grand_total, num_events, and volunteers.</p>
@@ -94,6 +147,29 @@ ul.task-list li input[type="checkbox"] {
 <section id="two-visualizations-for-the-rqs" class="level2">
 <h2 class="anchored" data-anchor-id="two-visualizations-for-the-rqs">Two Visualizations For the RQs</h2>
 <p><img src="sketch1.png" class="img-fluid" alt="RQ1"> <img src="sketch2.png" class="img-fluid"></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sumCountry <span class="ot">&lt;-</span> <span class="cf">function</span>(countryName) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  countryData <span class="ot">&lt;-</span> plastics <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(country <span class="sc">==</span> countryName) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">avePlastic =</span> <span class="fu">mean</span>(grand_total, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">aveHdpe =</span> <span class="fu">mean</span>(hdpe, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">aveLdpe =</span> <span class="fu">mean</span>(ldpe, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">avePet =</span> <span class="fu">mean</span>(pet, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">avePp =</span> <span class="fu">mean</span>(pp, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">avePs =</span> <span class="fu">mean</span>(ps, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">avePvc =</span> <span class="fu">mean</span>(pvc, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">sumCountry</span>(<span class="st">"Argentina"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 7
+  avePlastic aveHdpe aveLdpe avePet avePp avePs avePvc
+       &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+1       12.8    1.12   0.501   5.78  1.65 0.587 0.0798</code></pre>
+</div>
+</div>
 </section>
 
 </main>
