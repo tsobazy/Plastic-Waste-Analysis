@@ -9,6 +9,7 @@ format: html
 library(tidyverse)
 
 plastics <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-01-26/plastics.csv')
+plastics
 ```
 
 ## Context of the Data
@@ -30,4 +31,22 @@ Csvs from 2019 and 2020 were stacked to make one overall plastic.csv dataset. Th
 ## Two Visualizations For the RQs
 ![RQ1](sketch1.png)
 ![](sketch2.png)
+```{r}
 
+library(tidyverse)
+sumCountry <- function(countryName) {
+  countryData <- plastics %>% 
+    filter(country == countryName) %>%
+    summarize(
+      avePlastic = mean(grand_total, na.rm = TRUE), 
+      aveHdpe = mean(hdpe, na.rm = TRUE),
+      aveLdpe = mean(ldpe, na.rm = TRUE),
+      avePet = mean(pet, na.rm = TRUE),
+      avePp = mean(pp, na.rm = TRUE),
+      avePs = mean(ps, na.rm = TRUE),
+      avePvc = mean(pvc, na.rm = TRUE)
+    )
+}
+
+print(sumCountry("Argentina"))
+```
