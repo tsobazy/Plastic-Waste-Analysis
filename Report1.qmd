@@ -35,7 +35,7 @@ Csvs from 2019 and 2020 were stacked to make one overall plastic.csv dataset. Th
 ![](sketch1.png)
 ![](sketch2.png)
 
-## Summary Statistics for a Given Country
+## Average Plastic Type Breakdown for a Given Country
 ```{r}
 sumCountry <- function(countryName) {
   countryData <- plastics %>% 
@@ -96,7 +96,7 @@ percent_plastic_type <- function(country_name, parent_company_name, plastic_type
 percent_plastic_type("Argentina", "Nestle", "pet")
 ```
 
-## Top 10 Countries by LDPE Proportion of Total Polyethylene Plastic Waste
+## Top 10 Countries by LDPE Proportion of Polyethylene Plastic Waste
 ```{r}
 dpe_prop <- function(country_name) {
   plastics %>%
