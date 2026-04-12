@@ -1,5 +1,5 @@
 ---
-title: "Report 1"
+title: "Project 1 Report"
 author: "Nathan Lee, Noah Nayve, Ryan Ekdahl, Taiga Sobajima"
 format: html
 ---
