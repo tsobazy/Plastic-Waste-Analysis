@@ -7,6 +7,9 @@ format: html
 ```{r}
 #| echo: true
 #| message: false
+library(httr)
+library(tidyjson)
+library(jsonlite)
 library(tidyverse)
 ```
 
@@ -143,8 +146,10 @@ plastics |>
   slice_max(ldpe_proportion, n = 10)
 ```
 
+
+## Using API to retrieve country-level data
 ```{r}
-#Function used to get data from the API
+# Function used to get data from the API
 my_api_key <- "ztAzoTS1l2zUjZHaX6FN6jlVNZwVtW0xinzollFP"
 
 base_url <- "https://api.api-ninjas.com/v1/country?name="
@@ -158,32 +163,43 @@ get_country_url <- function(country, api_key = my_api_key){
 ```
 
 ```{r}
-#Dataset for all countries from plastics taken from API, (3 missing)
- all_countries <- plastics |>                                                              
-    filter(country != "EMPTY") |>                                                           
-    distinct(country) |>                                                                    
-    pull(country)                                                                           
- all_countries_df <- map(all_countries, get_country_url)                                   
- all_countries_data <- map(all_countries_df, ~ fromJSON(rawToChar(.x$content)))  |>         
-    bind_rows() |>
-    relocate(name) 
+# Dataset for all countries from plastics taken from API, (3 missing)
+all_countries <- plastics |>
+  filter(country != "EMPTY") |>
+  distinct(country) |>
+  pull(country)
+
+all_countries_df <- map(all_countries, get_country_url)
+
+all_countries_data <- map(
+  all_countries_df,
+  ~fromJSON(rawToChar(.x$content))
+  ) |>
+  bind_rows() |>
+  relocate(name) 
 ```
 
 ```{r}
-#Merged plastics and population API datatset
+# Merged plastics and population API datatset
 population_plastics <- plastics |>
   mutate(country = str_to_title(country)) |>
   left_join(all_countries_data, by = c("country" = "name"))
 ```
 
 ```{r}
-#Visualization of plastic output versus gdp
+# Visualization of plastic output versus GDP
 population_plastics |>
   filter(parent_company == "Grand Total") |>
-  ggplot(aes(x = gdp_per_capita, y = grand_total)) +
+  ggplot(
+    aes(x = gdp_per_capita, y = grand_total)
+    ) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm") +
-  geom_text(aes(label = country), size = 2.5, check_overlap = TRUE, vjust = -0.5) +
+  geom_text(
+    aes(label = country),
+    size = 2.5,
+    check_overlap = TRUE,
+    vjust = -0.5) +
   scale_x_log10(labels = scales::label_dollar()) +
   scale_y_log10(labels = scales::label_comma()) +
   labs(
