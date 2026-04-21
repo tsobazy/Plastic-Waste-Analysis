@@ -11,9 +11,7 @@ library(httr)
 library(tidyjson)
 library(jsonlite)
 library(tidyverse)
-library(httr)
-library(tidyjson)
-library(jsonlite)
+library(plotly)
 ```
 
 ```{r}
@@ -31,10 +29,12 @@ Csvs from 2019 and 2020 were stacked to make one overall plastic.csv dataset. Th
 
 ## Two Research Questions With These Data
 1) Which companies appear most frequently across countries in terms of plastic pollution; is there a pattern in types of companies that show up?
+
 2) Which countries collected the most plastic overall, and how much of that is explained by number of volunteers vs. other factors?
 
 ## Two Research Questions with Supplemental Data
 1) Are the most frequently appearing companies the ones with the highest plastic packaging production?
+
 2) Do countries that are closer to coastlines tend to have more plastic pollution collected?
 
 ## Two Visualizations For the RQs
@@ -149,11 +149,10 @@ plastics |>
   slice_max(ldpe_proportion, n = 10)
 ```
 
-
 ## Using API to retrieve country-level data
 ```{r}
 # Function used to get data from the API
-my_api_key <- "ztAzoTS1l2zUjZHaX6FN6jlVNZwVtW0xinzollFP"
+my_api_key <- Sys.getenv("API_NINJAS_KEY")
 
 base_url <- "https://api.api-ninjas.com/v1/country?name="
 
@@ -164,6 +163,8 @@ get_country_url <- function(country, api_key = my_api_key){
   )
 }
 ```
+
+This supplemental dataset provides country-level demographic, economic, and geographic information. The API returns a variety of different variables for each country including gdp_per_capita, population, internet_users, tourists, region, urban_population, co2_emissions, and many others.
 
 ```{r}
 # Dataset for all countries from plastics taken from API, (3 missing)
@@ -182,14 +183,25 @@ all_countries_data <- map(
   relocate(name) 
 ```
 
+Note: We noticed that all_countries_data have duplicated rows. So, we handle this by making each row unique.
+
 ```{r}
-# Merged plastics and population API datatset
+all_countries_data <- all_countries_data |>
+  distinct(name, .keep_all = TRUE)
+```
+
+```{r}
+# Merge plastics and population API datatset
 population_plastics <- plastics |>
   mutate(country = str_to_title(country)) |>
   left_join(all_countries_data, by = c("country" = "name"))
 ```
 
+### Visualization 1
 ```{r}
+#| warning: false
+#| message: false
+
 # Visualization of plastic output versus GDP
 population_plastics |>
   filter(parent_company == "Grand Total") |>
@@ -202,7 +214,8 @@ population_plastics |>
     aes(label = country),
     size = 2.5,
     check_overlap = TRUE,
-    vjust = -0.5) +
+    vjust = -0.5
+    ) +
   scale_x_log10(labels = scales::label_dollar()) +
   scale_y_log10(labels = scales::label_comma()) +
   labs(
@@ -213,3 +226,168 @@ population_plastics |>
   theme_classic()
 ```
 
+### Visualization 2
+```{r}
+# Visualization of interner user% by total plastic collected for each country
+
+bubble_plot <- population_plastics |>
+  filter(parent_company == "Grand Total",
+         country != "Empty",
+         !is.na(region)) |>
+  ggplot(
+    aes(x = internet_users, 
+        y = grand_total, 
+        size = volunteers, 
+        color = region,
+        text = paste("Country:", country,
+                     "<br>Internet Users:", internet_users, "%",
+                     "<br>Plastic Collected:", scales::comma(grand_total),
+                     "<br>Volunteers:", scales::comma(volunteers),
+                     "<br>Region:", region))
+    ) +
+  geom_point(alpha = 0.5) +
+  scale_x_continuous(labels = scales::label_comma()) +
+  scale_y_log10(labels = scales::label_comma()) +
+  scale_size_continuous(
+    labels = scales::label_comma(),
+    range = c(5, 25)
+    ) +
+  labs(
+    x = "Internet Users (% of Population)",
+    y = "Total Plastic Collected (log scale)",
+    size = "Volunteers",
+    color = "Region",
+    title = "Internet User % by Total Plastic Collected Per Country",
+    subtitle = "(bubble size = # volunteers)"
+    ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 14)
+    )
+
+ggplotly(bubble_plot, tooltip = "text")
+```
+
+
+## Second dataset
+```{r}
+# Function used to get data from the API
+base_url2 <- "https://restcountries.com/v3.1/name/"
+
+get_country_url2 <- function(country){
+  GET(
+    url = str_c(base_url2, URLencode(country))
+  )
+}
+```
+
+Another supplemental dataset contains more robust country demographic, cultural, and globablly recognized data, including country name (in native writing), region and subregion as identified by the UN, population size, geographic size, geographic location, etc. From this dataset we pulled population, region, subregion, and area.
+
+```{r}
+# Another dataset for all countries from plastics taken from API
+all_countries2 <- plastics |>
+  filter(country != "EMPTY") |>
+  distinct(country) |>
+  pull(country)
+
+all_countries_df2 <- map(all_countries2, get_country_url2)
+
+get_country_info2 <- function(response) {
+  if (response$status_code != 200) return(NULL)
+  result <- fromJSON(rawToChar(response$content))
+  result$status <- NULL
+  tibble(
+    name       = result$name$common,
+    official   = result$name$official,
+    region     = result$region,
+    subregion  = result$subregion,
+    population = result$population,
+    area       = result$area
+  )
+}
+
+all_countries_data2 <- map(all_countries_df2, get_country_info2) |>
+  compact() |>
+  bind_rows() |>
+  relocate(name)
+
+```
+
+Note: We noticed that all_countries_data2 have duplicated rows. So, we handle this by making each row unique.
+
+```{r}
+all_countries_data2 <- all_countries_data2 |>
+  distinct(name, .keep_all = TRUE)
+```
+
+```{r}
+#Merge plastics and demographic API dataset
+population_plastics2 <- plastics |>
+  mutate(country = str_to_title(country)) |>
+  left_join(all_countries_data2, by = c("country" = "name"))
+```
+
+### Visualization 1
+```{r}
+#Visualization of plastic collected by UN demographic subregion
+population_plastics2 |>
+  filter(!is.na(subregion), 
+         parent_company == "Grand Total") |>
+  group_by(subregion) |>
+  summarise(
+    grand_total = sum(grand_total, na.rm = TRUE), 
+    .groups = "drop"
+    ) |>
+  mutate(proportion = grand_total / sum(grand_total)) |>
+  ggplot(
+    aes(x = reorder(subregion, proportion), 
+        y = proportion, 
+        fill = subregion)
+    ) +
+  geom_col(width = 0.6) +
+  coord_flip() +
+  geom_text(
+    aes(label = scales::percent(proportion, accuracy = 0.1)),
+        hjust = -0.1, 
+        size = 3
+    ) +
+ scale_y_continuous(labels = scales::percent,
+                    expand = expansion(mult = c(0, 0.15))
+                    ) +
+  labs(title = "Global Proportion of Plastic Collected by UN Demographic Subregion",
+       x = "",
+       y = "Proportion") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### Visualization 2
+```{r}
+#| warning: false
+#| message: false
+
+#Total plastic by country population
+population_plastics2 |>
+  filter(parent_company == "Grand Total") |>
+  ggplot(
+    aes(x = population, y = grand_total)
+    ) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  geom_text(
+    aes(label = country),
+    size = 2.5,
+    check_overlap = TRUE,
+    vjust = -0.5
+    ) +
+  scale_x_log10(labels = scales::label_comma()) +
+  scale_y_log10(labels = scales::label_comma()) +
+  labs(
+    x = "Country Population (log scale)",
+    y = "Total Plastic Collected (log scale)",
+    title = "Plastic Collected Per Country By Population"
+  ) +
+  theme_minimal()
+
+```
