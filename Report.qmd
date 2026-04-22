@@ -7,6 +7,9 @@ format: html
 ```{r}
 #| echo: true
 #| message: false
+library(httr)
+library(tidyjson)
+library(jsonlite)
 library(tidyverse)
 library(httr)
 library(jsonlite)
@@ -147,6 +150,10 @@ plastics |>
   slice_max(ldpe_proportion, n = 10)
 ```
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6c956afa51069ebb3583e7b71171eb0827bc5c15
 ## Using API to retrieve country-level data
 ```{r}
 # Function used to get data from the API
@@ -210,6 +217,7 @@ population_plastics |>
   theme_classic()
 ```
 
+<<<<<<< HEAD
 
 ###Using API to get 
 
@@ -312,3 +320,5 @@ population_plastics2 |>
 
 ```
 ```
+=======
+>>>>>>> 6c956afa51069ebb3583e7b71171eb0827bc5c15
