@@ -16,6 +16,8 @@ library(jsonlite)
 library(tidyr)
 library(ggridges)
 library(plotly)
+library(gt)
+library(broom)
 ```
 
 ```{r}
@@ -270,8 +272,35 @@ get_country_url2 <- function(country){
 ```
 
 ```{r}
+# Another dataset for all countries from plastics taken from API
+all_countries2 <- plastics |>
+  filter(country != "EMPTY") |>
+  distinct(country) |>
+  pull(country)
+
+all_countries_df2 <- map(all_countries2, get_country_url2)
+
+get_country_info2 <- function(response) {
+  if (response$status_code != 200) return(NULL)
+  result <- fromJSON(rawToChar(response$content))
+  result$status <- NULL
+  tibble(
+    name       = result$name$common,
+    official   = result$name$official,
+    region     = result$region,
+    subregion  = result$subregion,
+    population = result$population,
+    area       = result$area
+  )
+}
+
+all_countries_data2 <- map(all_countries_df2, get_country_info2) |>
+  compact() |>
+  bind_rows() |>
+  relocate(name)
+
 # Load cached country data (originally fetched from restcountries.com API)
-all_countries_data2 <- read_csv("data/all_countries_data2.csv")
+# all_countries_data2 <- read_csv("data/all_countries_data2.csv")
 ```
 
 This new API dataset contains more robust country demographic, cultural, and globablly recognized data. Including country name (in native writing), region and subregion as identified by the UN, population size, geographic size, geographic location, etc. From this dataset we pulled population, region, subregion, and area. 
@@ -412,3 +441,50 @@ pop |>
   theme_minimal() +
   theme(legend.position = "none")
 ```
+
+```{r}
+#Linear Model used to figure out total contribution of number of volunteers on plastic grand total. 
+
+plastics_model <- plastics |>
+  filter(!parent_company %in% c("NULL", "Unknown", "Grand Total")) |>
+  mutate(parent_company = fct_lump_n(as.factor(parent_company), n = 10)) |>
+  lm(grand_total ~ volunteers + year + parent_company, data = _)
+
+anova(plastics_model) |>
+  tidy() |>
+  mutate(
+    pct_variance = sumsq / sum(sumsq) * 100,
+    term = recode(term,
+                  volunteers     = "Volunteers",
+                  year           = "Year",
+                  parent_company = "Parent Company",
+                  Residuals      = "Unexplained")
+  ) |>
+  select(term, df, sumsq, pct_variance, statistic, p.value) |>
+  gt() |>
+  tab_header(
+    title = "How Much of Plastic Collected Is Explained by Volunteers?",
+    subtitle = "Variance in grand_total partitioned across predictors"
+  ) |>
+  cols_label(
+    term         = "Source",
+    df           = "df",
+    sumsq        = "Sum of Squares",
+    pct_variance = "% of Variance",
+    statistic    = "F",
+    p.value      = "p-value"
+  ) |>
+  fmt_number(columns = c(sumsq, statistic), decimals = 1) |>
+  fmt_number(columns = pct_variance, decimals = 1) |>
+  fmt_number(columns = p.value, decimals = 4) |>
+  sub_missing(missing_text = "—") |>
+  tab_style(
+    style = list(cell_fill(color = "#FFF3B0"), cell_text(weight = "bold")),
+    locations = cells_body(rows = term == "Volunteers")
+  ) |>
+  tab_source_note(
+    paste0("Model R² = ", round(summary(plastics_model)$r.squared, 3),
+           " · n = ", nobs(plastics_model))
+  )
+```
+
