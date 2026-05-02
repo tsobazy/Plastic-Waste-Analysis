@@ -1,27 +1,64 @@
 ---
-title: "Project 1 Report"
+title: "Visualizing Plastics: Deliverable from Data"
 author: "Nathan Lee, Noah Nayve, Ryan Ekdahl, Taiga Sobajima"
 format: html
 editor: visual
+embed-resources: true
+code-fold: true
 ---
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
 
 ```{r}
 #| echo: false
-2 * 2
+#| message: false
+#| label: loading in libraries
+library(httr)
+library(tidyjson)
+library(jsonlite)
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(tidyr)
+library(ggridges)
+library(plotly)
+library(gt)
+library(broom)
+library(Polychrome)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+# Data Context
+
+### Plastic (Main Data Set)
+
+The main data set comes from Sarah Sauve, who conducted an audit based on Break Free from Plastic (BFFP), a global organization that runs annual brand audits. In these audits, volunteers around the world collect and report plastic waste. This makes the data set observational, as it relies on self-reported data submitted by volunteers each year, specifically for 2019 and 2020 in this case. However, the exact methods used by each volunteer is unknown. Each observation represents the plastic collected from a specific parent company within a given country and year. Here, Sauve intends to utilize this data set to raise plastic pollution awareness and highlight its importance. We are further supporting Sauve with our own analysis on two research questions presented later in this deliverable.
+
+Below is a breakdown of all the variables in this data set:
+
+- country (character): country of cleanup
+
+- year (double): year, either 2019 or 2020
+
+- parent_company (character): source of plastic
+
+- empty (double): plastics counted without a brand being recorded
+
+- hdpe (double): high density polyethylene count (i.e. plastic milk containers, plastic bags, bottle caps, trash cans, oil cans, plastic lumber, toolboxes, supplement containers)
+
+- ldpe (double): low density polyethylene count (i.e. plastic bags, Ziploc bags, buckets, squeeze bottles, plastic tubes, chopping boards)
+
+- o (double): other counts
+
+- pet (double): polyester plastic count (i.e. polyester fibers, soft drink bottles, food containers)
+
+- pp (double): polypropylene count (i.e. flower pots, bumpers, car interior trim, industrial fibers, carry-out beverage cups, microwavable food containers, DVD keep cases)
+
+- ps (double): polystyrene count (i.e. toys, video cassettes, ashtrays, trunks, beverage/food coolers, beer cups, wine and champagne cups, carry-out food containers, Styrofoam)
+
+- pvc (double): PVC plastic count (window frames, bottles for chemicals, flooring, plumbing pipes)
+
+- grand_total (double): grand total count (all types of plastic)
+
+- num_events (double): number of counting events
+
+- volunteers (double): number of volunteers
+
+However, this data set has important limitations and potential inconsistencies. The data depends on where volunteers are located, meaning it is more likely to be collected in accessible areas, which can lead over or under representation in some regions and introduce biased decisions. Due to the nature of self-reported data, there is no way for us to verify the data, nor see the differences in recognition between places. There may also be variability in how the plastic data is classified and reported to BFFP despite clear definitions.

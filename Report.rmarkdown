@@ -487,3 +487,4 @@ anova(plastics_model) |>
   )
 ```
 
+
