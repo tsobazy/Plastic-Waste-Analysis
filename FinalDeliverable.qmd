@@ -7,24 +7,6 @@ embed-resources: true
 code-fold: true
 ---
 
-```{r}
-#| echo: false
-#| message: false
-#| label: loading in libraries
-library(httr)
-library(tidyjson)
-library(jsonlite)
-library(tidyverse)
-library(httr)
-library(jsonlite)
-library(tidyr)
-library(ggridges)
-library(plotly)
-library(gt)
-library(broom)
-library(Polychrome)
-```
-
 # Data Context
 
 ### Plastic (Main Data Set)
@@ -61,4 +43,34 @@ Below is a breakdown of all the variables in this data set:
 
 - volunteers (double): number of volunteers
 
-However, this data set has important limitations and potential inconsistencies. The data depends on where volunteers are located, meaning it is more likely to be collected in accessible areas, which can lead over or under representation in some regions and introduce biased decisions. Due to the nature of self-reported data, there is no way for us to verify the data, nor see the differences in recognition between places. There may also be variability in how the plastic data is classified and reported to BFFP despite clear definitions.
+Before combining two CSV files, the 2019 and 2020 data, some data cleaning steps were implemented. The 2019 CSV had two columns for "pp" (Polypropylene) and "ps" (Polystyrene) counts, so the repeated columns were combined to make one overall column for each variable. The data type of the "grand_total" column from the 2020 CSV was changed from character to numeric. Lastly, some variables were renamed to match one another, ensuring no errors when combining the two CSV files.
+
+However, this data set has important limitations and potential inconsistencies to consider. The data depends on where volunteers are located, meaning it is more likely to be collected in accessible areas, which can lead over or under representation in some regions and introduce biased decisions. Due to the nature of self-reported data, there is no way for us to verify the data, nor see the differences in recognition between places. There may also be variability in how the plastic data is classified and reported to BFFP despite clear definitions.
+
+# Preparing Data
+
+### Loading in Libraries
+
+```{r}
+#| label: Loading Libraries
+#| message: false
+
+library(tidyverse)
+library(httr)
+library(tidyjson)
+library(jsonlite)
+library(plotly)
+library(gt)
+library(broom)
+library(Polychrome)
+library(ggridges)
+```
+
+### Reading Data Sets
+
+```{r}
+#| label: Reading Plastic Data Set
+#| message: false
+
+plastics <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-01-26/plastics.csv')
+```
