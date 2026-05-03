@@ -29,24 +29,29 @@ plastics
 ```
 
 ## Context of the Data
+
 This data comes from Break Free from Plastic, a global organization that runs yearly brand audits where volunteers around the world collect plastic waste. The dataset contains 2019 and 2020 data, with the following variables: country, year, parent_company, empty, hdpe, idpe, o, pet, pp, ps, pvc, grand_total, num_events, and volunteers.
 
 ## Data Cleaning
+
 Csvs from 2019 and 2020 were stacked to make one overall plastic.csv dataset. The grand_total column for 2020 csvs were mutated to convert the data type from character to numeric. Also, 2019 data had two columns for pp (Polypropylene) and ps (Polystyrene) count, so the columns are combined to make one overall column for each. Lastly, some of the variables are renamed to match one another, to make sure the merging functions correctly.
 
 ## Two Research Questions With These Data
-1) Which companies appear most frequently across countries in terms of plastic pollution; is there a pattern in types of companies that show up?
-2) Which countries collected the most plastic overall, and how much of that is explained by number of volunteers vs. other factors?
+
+1)  Which companies appear most frequently across countries in terms of plastic pollution; is there a pattern in types of companies that show up?
+2)  Which countries collected the most plastic overall, and how much of that is explained by number of volunteers vs. other factors?
 
 ## Two Research Questions with Supplemental Data
-1) Are the most frequently appearing companies the ones with the highest plastic packaging production?
-2) Do countries that are closer to coastlines tend to have more plastic pollution collected?
+
+1)  Are the most frequently appearing companies the ones with the highest plastic packaging production?
+2)  Do countries that are closer to coastlines tend to have more plastic pollution collected?
 
 ## Two Visualizations For the RQs
-![](sketch1.png)
-![](sketch2.png)
+
+![](sketch1.png) ![](sketch2.png)
 
 ## Average Plastic Type Breakdown for a Given Country
+
 ```{r}
 #| label: using existing column with custom function
 # Function to create breakdown of plastic type averages given a country
@@ -69,6 +74,7 @@ print(sumCountry("Argentina"))
 ```
 
 ## Grand Total Summary Statistics for each Country
+
 ```{r}
 #| label: using existing column with custom function and iteration
 # Function to create summary statistics of grand total given a country
@@ -103,6 +109,7 @@ plastics |>
 ```
 
 ## Percent Plastic Type by Country and Company
+
 ```{r}
 #| label: using modified columns with custom function
 # Function creating percent of plastic produced given a country and parent company
@@ -136,6 +143,7 @@ percent_plastic_type("Argentina", "Nestle", "pet")
 ```
 
 ## Top 10 Countries by Plastic Waste Collected per Cleanup Event
+
 ```{r}
 #| label: using modified columns with custom function and iteration
 
@@ -197,7 +205,7 @@ plastic_types |>
 
 ```{r}
 # Function used to get data from the API
-my_api_key <- "ztAzoTS1l2zUjZHaX6FN6jlVNZwVtW0xinzollFP"
+my_api_key <- Sys.getenv("API_NINJAS_KEY")
 
 base_url <- "https://api.api-ninjas.com/v1/country?name="
 
@@ -301,7 +309,7 @@ all_countries_data2 <- map(all_countries_df2, get_country_info2) |>
 # all_countries_data2 <- read_csv("data/all_countries_data2.csv")
 ```
 
-This new API dataset contains more robust country demographic, cultural, and globablly recognized data. Including country name (in native writing), region and subregion as identified by the UN, population size, geographic size, geographic location, etc. From this dataset we pulled population, region, subregion, and area. 
+This new API dataset contains more robust country demographic, cultural, and globablly recognized data. Including country name (in native writing), region and subregion as identified by the UN, population size, geographic size, geographic location, etc. From this dataset we pulled population, region, subregion, and area.
 
 ```{r}
 # Merged plastics and demographic API dataset
@@ -402,7 +410,6 @@ bubble_plot <- population_plastics |>
 ggplotly(bubble_plot, tooltip = "text")
 ```
 
-
 ```{r}
 # Distribution of Total Plastic Collected by Urban Population Growth Rate
 
@@ -487,3 +494,12 @@ anova(plastics_model) |>
   )
 ```
 
+
+
+
+
+
+
+
+
+ 
