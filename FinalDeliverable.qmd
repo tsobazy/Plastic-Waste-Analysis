@@ -3,69 +3,85 @@ title: "Visualizing Plastics: Deliverable from Data"
 author: "Nathan Lee, Noah Nayve, Ryan Ekdahl, Taiga Sobajima"
 format:
   html:
-    theme: cerulean
+    theme: flatly
     embed-resources: true
     code-fold: true
 editor: source
 ---
 
-```{r}
-#| echo: false
-#| message: false
-library(httr)
-library(tidyjson)
-library(jsonlite)
-library(tidyverse)
-library(httr)
-library(jsonlite)
-library(tidyr)
-library(ggridges)
-library(plotly)
-library(gt)
-library(broom)
-library(Polychrome)
-library(glue)
-```
-
 # Data Context
 
 ### Plastic (Main Data Set)
 
-The main data set comes from Sarah Sauve, who conducted an audit based on Break Free from Plastic (BFFP), a global organization that runs annual brand audits. In these audits, volunteers around the world collect and report plastic waste. This makes the data set observational, as it relies on self-reported data submitted by volunteers each year, specifically for 2019 and 2020 in this case. However, the exact methods used by each volunteer is unknown. Each observation represents the plastic collected from a specific parent company within a given country and year. Here, Sauve intends to utilize this data set to raise plastic pollution awareness and highlight its importance. We are further supporting Sauve with our own analysis on two research questions presented later in this deliverable.
+The main data set comes from Sarah Sauve, who conducted an audit based on Break Free from Plastic (BFFP), a global organization that runs annual brand audits. In these audits, volunteers around the world collect and report plastic waste. This makes the data set observational, as it relies on self-reported data submitted by volunteers each year, specifically for 2019 and 2020 in this case. However, the exact methods used by each volunteer are unknown. Each observation represents the plastic collected from a specific parent company within a given country and year. Here, Sauve intends to utilize this data set to raise plastic pollution awareness and highlight its importance. We are further supporting Sauve with our own analysis on two research questions presented later in this deliverable.
 
 Below is a breakdown of all the variables in this data set:
 
--   country (character): country of cleanup
+- **country** (character): country of cleanup
 
--   year (double): year, either 2019 or 2020
+- **year** (double): year, either 2019 or 2020
 
--   parent_company (character): source of plastic
+- **parent_company** (character): source of plastic
 
--   empty (double): plastics counted without a brand being recorded
+- **empty** (double): plastics counted without a brand being recorded
 
--   hdpe (double): high density polyethylene count (i.e. plastic milk containers, plastic bags, bottle caps, trash cans, oil cans, plastic lumber, toolboxes, supplement containers)
+- **hdpe** (double): high density polyethylene count (i.e. plastic milk containers, plastic bags, bottle caps, trash cans, oil cans, plastic lumber, toolboxes, supplement containers)
 
--   ldpe (double): low density polyethylene count (i.e. plastic bags, Ziploc bags, buckets, squeeze bottles, plastic tubes, chopping boards)
+- **ldpe** (double): low density polyethylene count (i.e. plastic bags, Ziploc bags, buckets, squeeze bottles, plastic tubes, chopping boards)
 
--   o (double): other counts
+- **o** (double): other counts
 
--   pet (double): polyester plastic count (i.e. polyester fibers, soft drink bottles, food containers)
+- **pet** (double): polyester plastic count (i.e. polyester fibers, soft drink bottles, food containers)
 
--   pp (double): polypropylene count (i.e. flower pots, bumpers, car interior trim, industrial fibers, carry-out beverage cups, microwavable food containers, DVD keep cases)
+- **pp** (double): polypropylene count (i.e. flower pots, bumpers, car interior trim, industrial fibers, carry-out beverage cups, microwavable food containers, DVD keep cases)
 
--   ps (double): polystyrene count (i.e. toys, video cassettes, ashtrays, trunks, beverage/food coolers, beer cups, wine and champagne cups, carry-out food containers, Styrofoam)
+- **ps** (double): polystyrene count (i.e. toys, video cassettes, ashtrays, trunks, beverage/food coolers, beer cups, wine and champagne cups, carry-out food containers, Styrofoam)
 
--   pvc (double): PVC plastic count (window frames, bottles for chemicals, flooring, plumbing pipes)
+- **pvc** (double): PVC plastic count (window frames, bottles for chemicals, flooring, plumbing pipes)
 
--   grand_total (double): grand total count (all types of plastic)
+- **grand_total** (double): grand total count (all types of plastic)
 
--   num_events (double): number of counting events
+- **num_events** (double): number of counting events
 
--   volunteers (double): number of volunteers
+- **volunteers** (double): number of volunteers
 
 Before combining two CSV files, the 2019 and 2020 data, some data cleaning steps were implemented. The 2019 CSV had two columns for "pp" (Polypropylene) and "ps" (Polystyrene) counts, so the repeated columns were combined to make one overall column for each variable. The data type of the "grand_total" column from the 2020 CSV was changed from character to numeric. Lastly, some variables were renamed to match one another, ensuring no errors when combining the two CSV files.
 
-However, this data set has important limitations and potential inconsistencies to consider. The data depends on where volunteers are located, meaning it is more likely to be collected in accessible areas, which can lead over or under representation in some regions and introduce biased decisions. Due to the nature of self-reported data, there is no way for us to verify the data, nor see the differences in recognition between places. There may also be variability in how the plastic data is classified and reported to BFFP despite clear definitions.
+However, this data set has important limitations and potential inconsistencies to consider. The data depends on where volunteers are located, meaning it is more likely to be collected in accessible areas, which can lead to over- or under- representation in some regions and introduce bias. Due to the nature of self-reported data, there is no way for us to verify the data. There may also be variability in how the plastic data is classified and reported to BFFP despite clear definitions.
+
+### Country (Outside Data Set)
+
+The supplementary data set comes from API Ninjas, a software company that publishes real-world data into formatted APIs. The Country API aggregates geographic, demographic, and economic metrics for every country in the world which can be found at: <https://api-ninjas.com/api/country>. Each observation represents a single country, where each row contains nation level statistics for that country. For example, a single row might represent the United States, containing values such as a population of approximately 331 million, a GDP of roughly \$23 trillion, and an unemployment rate around 5%. We are utilizing this API to join demographic and economic context to the primary plastics data set, supporting our research questions on how volunteer participation and plastic collection patterns vary across countries of different sizes and development levels.
+
+The data were accessed from our code using HTTP GET requests to the /v1/country endpoint, with each country returned as a JSON object. Requests were made by country name, iterating over the unique country names in the plastics data set. Each JSON object was then joined to the plastics data set on country name, adding each country's demographic and economic metrics to its corresponding plastic collection observation.
+
+Below is a breakdown of the key variables used from this data set:
+
+- **name** (character): name of the country 
+
+- **population** (integer): total population of the country
+
+- **gdp** (double): gross domestic product in US Dollars 
+
+- **gdp_growth** (double): GDP growth rate in % 
+
+- **unemployment** (double): unemployment rate in % 
+
+- **surface_area** (double): total surface area of the country in km² 
+
+- **urban_pop_rate** (double): percentage of the population living in urban areas 
+
+- **fertility** (double): average number of children born per woman 
+
+- **infant_mortality** (double): number of infant deaths per 1,000 live births 
+
+- **currency** (character): 3-letter currency code of the country 
+
+- **threatened_species** (integer): number of threatened species
+
+- **forested_area** (double): percentage of the country's total land area covered by forest
+
+This data set also has important limitations to consider. API Ninjas does not include collection dates or timestamps for individual records, so we are unable to determine how recent each country's data was collected or updated. Additionally, since the exact source for each variable is not listed, it is difficult to determine the reliability of certain metrics collected for each country. There were also discrepancies in how each country name was displayed between API Ninjas and our plastics data, requiring standardization prior to merging.
 
 # Preparing Data
 
@@ -74,9 +90,16 @@ However, this data set has important limitations and potential inconsistencies t
 ```{r}
 #| label: Loading Libraries
 #| message: false
-
 library(tidyverse)
 library(glue)
+library(gt)
+library(plotly)
+library(scales)
+library(ggridges)
+library(broom)
+library(httr)
+library(jsonlite)
+library(ggrepel)
 ```
 
 ### Reading Data Sets
@@ -88,9 +111,59 @@ library(glue)
 plastics <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-01-26/plastics.csv')
 ```
 
+### Using API to retrieve country-level data
+
+```{r}
+#| eval: false
+# Function used to get data from the API
+my_api_key <- Sys.getenv("API_NINJAS_KEY")
+
+base_url <- "https://api.api-ninjas.com/v1/country?name="
+
+get_country_url <- function(country, api_key = my_api_key){
+  GET(
+    url = str_c(base_url, URLencode(country)),
+    add_headers("X-Api-Key" = api_key)
+  )
+}
+```
+
+```{r}
+#| eval: false
+# Dataset for all countries from plastics taken from API, (3 missing)
+all_countries <- plastics |>
+  filter(country != "EMPTY") |>
+  distinct(country) |>
+  pull(country)
+
+all_countries_df <- map(all_countries, get_country_url)
+
+all_countries_data <- map(
+  all_countries_df,
+  ~fromJSON(rawToChar(.x$content))
+  ) |>
+  bind_rows() |>
+  relocate(name) 
+```
+
+```{r}
+#| eval: false
+# Merged plastics and population API datatset
+population_plastics <- plastics |>
+  mutate(country = str_to_title(country)) |>
+  left_join(all_countries_data, by = c("country" = "name"))
+```
+
+```{r}
+#| message: false
+# API data was fetched once and merged dataset was written to CSV to avoid repeated API calls
+population_plastics <- read_csv("data/population_plastics.csv")
+```
+
 # Research Questions
 
-1.  so Do countries with more volunteers tend to collect more proportions of both high and low density polyethylene plastic in 2019 and 2020?
+1.  Do countries with more volunteers tend to collect more proportions of both high and low density polyethylene plastic in 2019 and 2020?
+
 2.  Do countries with greater forest coverage and more threatened species show a different breakdown of plastic types?
 
 # Summaries and Visualizations
@@ -99,17 +172,17 @@ plastics <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytues
 
 This custom function "plastic_volunteer_summary" finds volunteer and polyethylene plastic statistics based on an inputted polyethylene plastic type and country name. The default data set input is the main, plastic data set.
 
-Below are the outputs generated by this function. Note, the output statistics assume a given country provided by the input and years 2019 and 2020. The () will be either "H" or "L", indicating high or low density polyethylene respectively:
+Below are the outputs generated by this function. Note, the output statistics assume a given country provided by the input and years 2019 and 2020. The letter in the () will be either "H" or "L", indicating high or low density polyethylene respectively (HDPE or LDPE):
 
--   Ave\_()DPE (double): average polyethylene across parent companies
+- Ave\_()DPE (double): average polyethylene across parent companies
 
--   Percent\_()DPE (double): percent polyethylene collected over all plastics
+- Percent\_()DPE (double): percent polyethylene collected over all plastics
 
--   Total\_()DPE (double): total polyethylene collected
+- Total\_()DPE (double): total polyethylene collected
 
--   Ave_Vol (double): average number of volunteers
+- Ave_Vol (double): average number of volunteers
 
--   Total_Vol (double): total number of volunteers
+- Total_Vol (double): total number of volunteers
 
 ```{r}
 #| label: plastic_volunteer_summary function
@@ -131,11 +204,12 @@ plastic_volunteer_summary <- function(polyethylene, country_name, data = plastic
       paste("Country not found:", country_name)
       )
     }
-
+  
   # setting column names for output
-  avg_col <- glue("avg_{polyethylene}")
-  percent_col <- glue("percent_{polyethylene}")
-  total_col <- glue("total_{polyethylene}")
+  caps_dpe <- toupper(polyethylene)
+  avg_col <- glue("Ave_{caps_dpe}")
+  percent_col <- glue("Percent_{caps_dpe}")
+  total_col <- glue("Total_Plastic")
   
   # main body finding summary stats of volunteer and plastic type
   result <- data |>
@@ -146,8 +220,8 @@ plastic_volunteer_summary <- function(polyethylene, country_name, data = plastic
       !!percent_col := sum(percent_plastic_type, na.rm = TRUE) /
                         sum(!is.na(percent_plastic_type)) * 100,
       !!total_col := sum(grand_total, na.rm = TRUE),
-      avg_volunteers = mean(volunteers, na.rm = TRUE),
-      total_volunteers = sum(volunteers, na.rm = TRUE)
+      Ave_Vol = first(volunteers) / n(),
+      Total_Vol = first(volunteers)
     ) |>
     mutate(
       across(where(is.numeric), ~round(., 2)),
@@ -158,68 +232,376 @@ plastic_volunteer_summary <- function(polyethylene, country_name, data = plastic
 }
 ```
 
-Below are high density polystyrene and volunteer statistics from United States over 2019 and 2020.
+Below are high density polystyrene (HDPE) and volunteer statistics from United States over 2019 and 2020.
 
 ```{r}
 #| label: hdpe for USA
 
 plastic_volunteer_summary("hdpe", "United States of America") |>
-  rename(
-    Ave_HDPE = avg_hdpe,
-    Percent_HDPE = percent_hdpe,
-    Total_HDPE = total_hdpe,
-    Ave_Vol = avg_volunteers,
-    Total_Vol = total_volunteers
+  gt() |>
+  tab_header(
+    title =  md("**High Density Polystyrene Summary**"),
+    subtitle = "United States of America") |>
+  tab_caption("Table 1: Summary statistics for high density polystyrene plastic collected in the USA") |>
+  tab_spanner(
+    label = "HDPE Metrics",
+    columns = c(Ave_HDPE, Percent_HDPE, Total_Plastic)
+    ) |>
+  tab_spanner(
+    label = "Volunteer Metrics",
+    columns = c(Ave_Vol, Total_Vol)
+    ) |>
+  cols_label(
+    Ave_HDPE = "Avg HDPE",
+    Percent_HDPE = "% HDPE",
+    Total_Plastic = "Total Plastic",
+    Ave_Vol = "Avg Volunteers",
+    Total_Vol = "Total Volunteers"
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#457B9D"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#1D3557"),
+    locations = cells_column_spanners()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_spanners()
   )
 ```
 
-yap about this saying big volunteer small hdpe and find another country thats opposite or something like that (maybe a third if have time
-
-then show top 5 and bot 5 ave volunteer bc interesting
-
-iteration by doing to all countries prob do a bubble plot to that
-
-### Question 2
-
-## Using API to retrieve country-level data
+Table 1 shows high density HDPE and volunteer statistics for the United States of America. Interestingly, the USA has both small amounts of volunteers and HDPE plastic collected at 9.2% and a mean of 0.72 HDPE plastics collected across parent companies. This may entail that the number of volunteers is correlated to the amount of HDPE plastic collected. To find whether this 9.2% is truly low, we will look at low density polystyrene (LDPE) statistics.
 
 ```{r}
-# Function used to get data from the API
-my_api_key <- "g4HwR7P9wKOPK1brE6COXBh2sXHki51KygbqWc2y"
+#| label: ldpe for USA
 
-base_url <- "https://api.api-ninjas.com/v1/country?name="
-
-get_country_url <- function(country, api_key = my_api_key){
-  GET(
-    url = str_c(base_url, URLencode(country)),
-    add_headers("X-Api-Key" = api_key)
+plastic_volunteer_summary("ldpe", "United States of America") |>
+  gt() |>
+  tab_header(
+    title =  md("**Low Density Polystyrene Summary**"),
+    subtitle = "United States of America") |>
+  tab_caption("Table 2: Summary statistics for low density polystyrene plastic collected in the USA") |>
+  tab_spanner(
+    label = "LDPE Metrics",
+    columns = c(Ave_LDPE, Percent_LDPE, Total_Plastic)
+    ) |>
+  tab_spanner(
+    label = "Volunteer Metrics",
+    columns = c(Ave_Vol, Total_Vol)
+    ) |>
+  cols_label(
+    Ave_LDPE = "Avg LDPE",
+    Percent_LDPE = "% LDPE",
+    Total_Plastic = "Total Plastic",
+    Ave_Vol = "Avg Volunteers",
+    Total_Vol = "Total Volunteers"
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#457B9D"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#1D3557"),
+    locations = cells_column_spanners()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_spanners()
   )
-}
 ```
 
+Even with the same number of volunteers in the USA, the proportion of LDPE collected was reported to be higher. Table 2 shows these statistics, with 14.68% of the plastic being of the LDPE type and more than 1 LDPE plastic being collected for every parent company, on average. There may be an association or more comparisons to further investigate, but we are interested in comparing a type of polystyrene across different countries, specifically looking at volunteer statistics. We decided to look into Indonesia HDPE statistics.
+
 ```{r}
-# Dataset for all countries from plastics taken from API, (3 missing)
+#| label: hdpe for Indonesia
+
+plastic_volunteer_summary("hdpe", "Indonesia") |>
+  gt() |>
+  tab_header(
+    title =  md("**High Density Polystyrene Summary**"),
+    subtitle = "Indonesia") |>
+  tab_caption("Table 3: Summary statistics for high density polystyrene plastic collected in Indonesia") |>
+  tab_spanner(
+    label = "HDPE Metrics",
+    columns = c(Ave_HDPE, Percent_HDPE, Total_Plastic)
+    ) |>
+  tab_spanner(
+    label = "Volunteer Metrics",
+    columns = c(Ave_Vol, Total_Vol)
+    ) |>
+  cols_label(
+    Ave_HDPE = "Avg HDPE",
+    Percent_HDPE = "% HDPE",
+    Total_Plastic = "Total Plastic",
+    Ave_Vol = "Avg Volunteers",
+    Total_Vol = "Total Volunteers"
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#457B9D"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#1D3557"),
+    locations = cells_column_spanners()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_spanners()
+  )
+```
+
+According to table 3, Indonesia has significantly more volunteers (6850 compared to USA's 740). However, the amount of HDPE plastic collected was almost half, only 4.25% of the plastic collected was of the HDPE kind. This suggest environmental and other country-specific conditions playing a major factor in different types of plastic collected, or even the distribution in plastic types. To easier see patterns and more statistics, we gathered data for the top and bottom 5 average volunteers for both high and low density.
+
+```{r}
+#| label: top and bottom 5 average volunteer hdpe and ldp stats
+
+# top and bottom 5 countries
+top5_countries <- plastics |>
+  group_by(country) |>
+  summarise(ave_vol = first(volunteers) / n()) |>
+  slice_max(ave_vol, n = 5) |>
+  pull(country)
+
+bot5_countries <- plastics |>
+  group_by(country) |>
+  summarise(ave_vol = first(volunteers) / n()) |>
+  slice_min(ave_vol, n = 5) |>
+  pull(country)
+
+# hdpe table
+top5_hdpe <- map(top5_countries, ~plastic_volunteer_summary("hdpe", .x) |>
+                   mutate(Country = .x, .before = 1)) |>
+  list_rbind()
+bot5_hdpe <- map(bot5_countries, ~plastic_volunteer_summary("hdpe", .x) |>
+                   mutate(Country = .x, .before = 1)) |>
+  list_rbind()
+
+bind_rows(
+  top5_hdpe |> mutate(Group = "Top 5", .before = 2),
+  bot5_hdpe |> mutate(Group = "Bottom 5", .before = 2)
+) |>
+    mutate(
+      across(where(is.numeric), ~ifelse(is.nan(.), 0, .)),
+      across(where(is.character), ~ifelse(. == "NaN%", "0%", .))
+      ) |>
+  gt() |>
+  tab_header(
+    title =  md("**High Density Polystyrene Summary**"),
+    subtitle = "Top and Bottom 5 Average Volunteer Countries") |>
+  tab_caption("Table 4: Summary statistics for high density polystyrene plastic collected in the top and bottom 5 volunteer countries") |>
+  tab_spanner(
+    label = "Location",
+    columns = c(Country, Group)
+  ) |>
+  tab_spanner(
+    label = "HDPE Metrics",
+    columns = c(Ave_HDPE, Percent_HDPE, Total_Plastic)
+    ) |>
+  tab_spanner(
+    label = "Volunteer Metrics",
+    columns = c(Ave_Vol, Total_Vol)
+    ) |>
+  cols_label(
+    Ave_HDPE = "Avg HDPE",
+    Percent_HDPE = "% HDPE",
+    Total_Plastic = "Total Plastic",
+    Ave_Vol = "Avg Volunteers",
+    Total_Vol = "Total Volunteers"
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#457B9D"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#1D3557"),
+    locations = cells_column_spanners()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_spanners()
+  )
+
+# ldpe table
+top5_ldpe <- map(top5_countries, ~plastic_volunteer_summary("ldpe", .x) |>
+                   mutate(Country = .x, .before = 1)) |>
+  list_rbind()
+bot5_ldpe <- map(bot5_countries, ~plastic_volunteer_summary("ldpe", .x) |>
+                   mutate(Country = .x, .before = 1)) |>
+  list_rbind()
+
+bind_rows(
+  top5_ldpe |> mutate(Group = "Top 5", .before = 2),
+  bot5_ldpe |> mutate(Group = "Bottom 5", .before = 2)
+) |>
+    mutate(
+      across(where(is.numeric), ~ifelse(is.nan(.), 0, .)),
+      across(where(is.character), ~ifelse(. == "NaN%", "0%", .))
+      ) |>
+  gt() |>
+  tab_header(
+    title =  md("**Low Density Polystyrene Summary**"),
+    subtitle = "Top and Bottom 5 Average Volunteer Countries") |>
+  tab_caption("Table 5: Summary statistics for low density polystyrene plastic collected in the top and bottom 5 volunteer countries") |>
+  tab_spanner(
+    label = "Location",
+    columns = c(Country, Group)
+  ) |>
+  tab_spanner(
+    label = "LDPE Metrics",
+    columns = c(Ave_LDPE, Percent_LDPE, Total_Plastic)
+    ) |>
+  tab_spanner(
+    label = "Volunteer Metrics",
+    columns = c(Ave_Vol, Total_Vol)
+    ) |>
+  cols_label(
+    Ave_LDPE = "Avg LDPE",
+    Percent_LDPE = "% LDPE",
+    Total_Plastic = "Total Plastic",
+    Ave_Vol = "Avg Volunteers",
+    Total_Vol = "Total Volunteers"
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#457B9D"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_fill(color = "#1D3557"),
+    locations = cells_column_spanners()
+  ) |>
+  tab_style(
+    style = cell_text(color = "white", weight = "bold"),
+    locations = cells_column_spanners()
+  )
+```
+
+There seems to be no clear association based on looking at the top and bottom 5 average volunteer countries. In table 4, Taiwan (Republic of China), Bhutan, and Benin had no HDPE plastic types reported, as opposed to Cote D'Ivoire which had 100% HDPE report rate despite also being in the top 5 in average volunteers. Based on these percentages and averages, there seems to be no clear relationship between average number of volunteers and proportion of HDPE plastic reported. The LDPE data in table 5 is similar in a sense no clear pattern is shown. However, 4 out of the top 5 average volunteer countries did have no LDPE plastic reported.
+
+```{r}
+#| label: bubble plot showing average volunteers by hdpe reported across countries
+#| fig-alt: "Bubble plot showing average volunteers by the percentage high density polystyrene type reported across countries, additionally with country statistics when hovering over each circle. Note, the average volunteers are log-scaled to better fit the graph."
+
 all_countries <- plastics |>
-  filter(country != "EMPTY") |>
   distinct(country) |>
   pull(country)
 
-all_countries_df <- map(all_countries, get_country_url)
+bubble_data <- map(all_countries, ~plastic_volunteer_summary("hdpe", .x) |>
+                     mutate(Country = .x)) |>
+  list_rbind() |>
+  mutate(Percent_HDPE = as.numeric(str_remove(Percent_HDPE, "%"))) |>
+  filter(Percent_HDPE < 100)
 
-all_countries_data <- map(
-  all_countries_df,
-  ~fromJSON(rawToChar(.x$content))
-  ) |>
-  bind_rows() |>
-  relocate(name) 
+bubble_plot <- ggplot(bubble_data, aes(x = Ave_Vol,
+                        y = Percent_HDPE,
+                        size = Total_Plastic,
+                        color = Country,
+                        text = paste("Country:", Country,
+                                     "<br>Average Volunteers:", Ave_Vol,
+                                     "<br>Percent HDPE:", Percent_HDPE, "%",
+                                     "<br>Total Plastic:", comma(Total_Plastic))
+                        )) +
+  geom_point(alpha = 0.7) +
+  scale_size_continuous(range = c(2, 15)) +
+  scale_x_log10() +
+  scale_color_viridis_d() +
+  guides(color = "none") +
+  theme_minimal() +
+  labs(
+    title = "Figure 1: Average Volunteers vs. HDPE Plastic (%) by Country",
+    subtitle = "Bubble size represents total plastic collected",
+    x = "Average Volunteers (log scale)",
+    y = "",
+    size = "Total Plastic"
+  )
+
+ggplotly(bubble_plot, tooltip = "text")
 ```
+
+The bubble plot in figure 1 plots the average volunteers by the percent HDPE reported across all countries in the data set. The x-axis was log-scaled to better fit the graph and show the relationship easier. There seems to be a general positive association, meaning as the average number of volunteers increase, the number of HDPE reported increases. This may be due to how common the HDPE plastic is, so naturally more people would mean more proportion of HDPE being reported. However, some countries appear twice in this plot, such as Nigeria. Due to inconsistent naming, some countries are not represented well, but the general positive trend still remains. Having more volunteers also does not necessarily mean more HDPE reports. Take Benin as an example where the average number of volunteers was the highest even though there were zero HDPE reports. These outliers may arise from the differences each country has, such as certain laws advocating for plastic reuse or rules that ban these plastic types.
 
 ```{r}
-# Merged plastics and population API datatset
-population_plastics <- plastics |>
-  mutate(country = str_to_title(country)) |>
-  left_join(all_countries_data, by = c("country" = "name"))
+#| label: dumbbell plot comparing hdpe and ldpe proportions for top and bottom 10 volunteer countries
+#| warning: false
+#| fig-alt: "Dumbbell plot comparing HDPE (blue) and LDPE (orange) proportions for the top and bottom 10 countries by total volunteer count, split into two faceted panels. Countries are ordered by total volunteer count from low to high."
+
+plastics |>
+  filter(year %in% c(2019, 2020)) |>
+  filter(!country %in% c("EMPTY", "Grand Total")) |>
+  mutate(country = case_when(
+    str_to_upper(str_trim(country)) == "NIGERIA" ~ "Nigeria",
+    str_to_upper(str_trim(country)) == "TAIWAN_ REPUBLIC OF CHINA (ROC)" ~ "Taiwan",
+    TRUE ~ str_to_title(str_trim(country))
+  )) |>
+  mutate(
+    hdpe_prop = hdpe / grand_total,
+    ldpe_prop = ldpe / grand_total
+  ) |>
+  group_by(country) |>
+  summarise(
+    hdpe_prop = mean(hdpe_prop, na.rm = TRUE),
+    ldpe_prop = mean(ldpe_prop, na.rm = TRUE),
+    total_volunteers = sum(volunteers, na.rm = TRUE)
+  ) |>
+  arrange(total_volunteers) |>
+  slice(c(1:10, (n()-9):n())) |>
+  mutate(
+    country = fct_reorder(country, total_volunteers),
+    volunteer_group = c(rep("Bottom 10", 10), rep("Top 10", 10))
+  ) |>
+  ggplot(aes(y = country)) +
+  geom_segment(aes(x = hdpe_prop, xend = ldpe_prop, yend = country), color = "gray70") +
+  geom_point(aes(x = hdpe_prop), color = "steelblue", size = 2) +
+  geom_point(aes(x = ldpe_prop), color = "coral", size = 2) +
+  facet_wrap(~ volunteer_group, scales = "free_y") +
+  labs(
+    title = "Figure 2: HDPE vs LDPE Proportion by Country",
+    subtitle = "Bottom 10 and Top 10 Countries by Total Volunteer Count",
+    x = "Proportion of Total Plastic",
+    y = NULL,
+    caption = "Blue = HDPE | Orange = LDPE"
+  ) +
+  theme_minimal()
 ```
+
+To further investigate the relationship identified in Figure 1, Figure 2 compares HDPE and LDPE proportions for the top and bottom 10 countries by total volunteer count. This dumbbell plot contrasts both polyethylene types side by side to better illustrate how plastic composition differs between high and low volunteer countries. Among the top 10 volunteer countries, most show a significant gap between HDPE (blue) and LDPE (orange), with LDPE consistently exceeding HDPE, most prominently in Nigeria and Japan. This aligns with the LDPE findings in Table 5, where higher volunteer countries tended to report more LDPE overall. Conversely, the bottom 10 volunteer countries show both proportions clustered near zero, suggesting that low volunteer participation corresponds with minimal polyethylene collection of either type. Taking these observations together with Figure 1, the results provide some support for a positive association between volunteer count and polyethylene proportion. However, notable outliers such as Taiwan and Bhutan (which had high volunteer counts but zero polyethylene reported) suggest that country specific factors such as laws or regulations around plastic use, as mentioned previously, may contribute to this disparity.
+
+### Question 2
+
+This custom function "summarize_plastic_and_ecology" computes the average proportion of each plastic type along with ecological variables for a given country. The default data set input is the joined population plastics data set.
+
+Below are the outputs generated by this function for each country:
+
+- **avg_pet, avg_hdpe, avg_ldpe, avg_pp, avg_ps, avg_pvc, avg_o** (double): average proportion of each plastic type collected
+
+- **avg_forested** (double): average percentage of land covered by forest
+
+- **avg_threatened** (double): average number of threatened species
+
+- **leading_plastic** (character): the plastic type with the highest average proportion
+
+The function is then iterated over all 45 countries with available ecological data using `map()` and combined into a single summary table using `bind_rows()`.
 
 ```{r}
 # function that computes mean of the following variables for each country: country, pet, hdpe, ldpe, pp, ps, pvc, other, forested_area, and threatened_species
@@ -287,6 +669,8 @@ plastic_ecology_summary_table <- map(all_countries, summarize_plastic_and_ecolog
 ```
 
 ```{r}
+#| echo: false
+#| output: false
 # split the countries into 3 groups by forested_area using quantile function
 population_plastics |>
   filter(parent_company == "Grand Total",
@@ -307,10 +691,15 @@ plastic_ecology_summary_table |>
                                        "Medium (19-36%)",
                                        "High (> 36%)"))
   ) |>
+  group_by(forest_coverage_level) |>
+  slice_min(avg_forested, n = 5) |>
+  ungroup() |>
   arrange(avg_forested) |>
   gt(groupname_col = "forest_coverage_level") |>
+  tab_caption("Table 6: Plastic type proportions for the 5 least forested countries within each forest coverage level") |>
   tab_header(
-    title = "Plastic Type Proportions by Country and Forest Coverage"
+  title = "Plastic Type Proportions by Country and Forest Coverage",
+  subtitle = "Top 5 least forested countries within each coverage level"
   ) |>
   cols_label(
     country = "Country",
@@ -369,7 +758,12 @@ plastic_ecology_summary_table |>
   cols_hide(forest_coverage_level)
 ```
 
+Table 6 shows the five least forested countries within each forest coverage level. Among the low coverage level countries, PET dominates as the leading plastic for four out of five entries, with Maldives and Tunisia both reporting 100% PET. South Africa is the only exception, where 99.4% of plastic collected falls under the unclassified Other category. As forest coverage level increases into the medium range, the leading plastic shifts away from PET, where Rwanda, China, India, and the Philippines all report Other as their leading type, with India showing a particularly high LDPE proportion at 32.0%. In the high coverage level, we see Cameroon reporting LDPE as its leading plastic at 39.8%, with two countries reporting Other and PET as their leading plastic types. These results suggest that low forest coverage countries tend to be more heavily dominated by PET plastic, while higher coverage countries show more varied plastic composition, though country-specific reporting differences make direct comparisons difficult.
+
+
 ```{r}
+#| echo: false
+#| output: false
 # split the countries into 3 groups by threatened species using quantile function
 population_plastics |>
   filter(parent_company == "Grand Total",
@@ -416,6 +810,7 @@ population_plastics |>
     avg_forested = mean(forested_area, na.rm = TRUE)
   ) |>
   gt() |>
+  tab_caption("Table 7: Average plastic type composition grouped by biodiversity risk tier") |>
   tab_header(
     title = "Plastic Type Composition by Biodiversity Level"
   ) |>
@@ -470,41 +865,62 @@ population_plastics |>
   sub_missing(missing_text = "—")
 ```
 
+Table 7 aggregates plastic composition by biodiversity level across all countries. Something that comes to attention is that the PET proportion drops consistently as biodiversity level increases, from 71.7% in low biodiversity countries to 38.3% in medium and just 21.5% in high biodiversity countries, a drop of over 50 percentage points. HDPE generally increases with biodiversity level, rising from 1.5% to 10.9% to 12.4% across low, medium, and high levels respectively. The Other category remains consistently high across all three levels at around 57-60%. These results suggest that countries with greater ecological richness tend to collect a fundamentally different composition of plastic waste compared to less biodiverse nations, particularly in terms of PET plastic proportion.
+
 ```{r}
+#| message: false
+#| warning: false
 #| fig-alt: "Scatter plot showing forested area percentage on the x-axis and threatened species count on the y-axis for each country on a log scale. Points are colored by their leading plastic type, revealing that PET-dominated countries cluster in low forest, low threatened species regions while Other dominated countries spread across higher ecological zones."
 
-plastic_ecology_summary_table |>
-  ggplot(
-    aes(x = avg_forested,
-        y = avg_threatened,
-        color = leading_plastic,
-        label = country)
-    )+
-  geom_point(size = 3, alpha = 0.6) +
-  geom_text(size = 2.5, check_overlap = TRUE, vjust = -0.7) +
+plot_data <- plastic_ecology_summary_table |>
+  mutate(
+    # reorder legend by frequency, with "Other" pushed to the end
+    leading_plastic = fct_infreq(leading_plastic) |>
+                      fct_relevel("Other", after = Inf),
+    # alpha by group: dim "Other", emphasize named plastics
+    point_alpha = if_else(leading_plastic == "Other", 0.4, 0.9)
+  )
+
+ggplot(plot_data,
+       aes(x = avg_forested,
+           y = avg_threatened,
+           color = leading_plastic,
+           label = country)) +
+  geom_point(aes(alpha = point_alpha), size = 1.5) +
+  geom_text_repel(size = 2,
+                  max.overlaps = Inf,
+                  box.padding = 0.25,
+                  point.padding = 0.15,
+                  segment.color = "gray70",
+                  segment.size = 0.25,
+                  show.legend = FALSE) +
   scale_y_log10(labels = scales::label_comma()) +
+  scale_alpha_identity() +
   scale_color_manual(
     values = c(
-    "PET"   = "#E74C3C",
-    "HDPE"  = "#3498DB",
-    "LDPE"  = "#F39C12",
-    "PP"    = "#18BC9C",
-    "PS"    = "#9B59B6",
-    "PVC"   = "#2C3E50",
-    "Other" = "#95A5A6"
-  )
+      "PET"   = "#E74C3C",
+      "HDPE"  = "#3498DB",
+      "LDPE"  = "#F39C12",
+      "PP"    = "#18BC9C",
+      "PS"    = "#9B59B6",
+      "PVC"   = "#2C3E50",
+      "Other" = "#95A5A6"
+    )
   ) +
   labs(
     x = "Forested Area (%)",
-    y = "Threatened Species (log scale)",
+    y = "Threatened Species Count (log scale)",
     color = "Leading Plastic",
-    title = "Where Do Different Plastic Types Dominate?"
+    title = "Figure 3: Where Do Different Plastic Types Dominate?"
   ) +
   theme_minimal() +
   theme(plot.title = element_text(face = "bold", size = 14))
 ```
 
+Figure 3 plots each country's forested area against its threatened species count, with points colored by leading plastic type. The most noticeable pattern is the clustering of PET-dominated countries in the lower left region of the plot, corresponding to low forest coverage and fewer threatened species (seen in Table 7). As we move toward higher forest coverage and more threatened species, the leading plastic shifts away from PET. Japan and Cameroon stand out in this region with PP and LDPE as their leading plastics respectively. United Kingdom appears to be an outlier, showing PS as its leading plastic despite relatively low forest coverage. Figure 3 visually reinforces the findings from Tables 6 and 7, illustrating that PET dominance is associated with lower ecological richness.
+
 ```{r}
+#| message: false
 #| fig-alt: "Ridge plot showing how the distribution of threatened species count differs across the three most commonly collected plastic types. Each country contributes to a plastic's ridge weighted by how much of that plastic it collected, so a ridge shifts right when the plastic is dominated by countries with more threatened species."
 
 # Identify the three most-collected plastic types in the data
@@ -534,9 +950,9 @@ population_plastics |>
              weight = count)) +
   geom_density_ridges(scale = 0.8, alpha = 0.7) +
   scale_x_log10(labels = scales::label_comma()) +
-  scale_fill_manual(values = c("#f8d7da", "#fff3cd", "#d4edda")) +
+  scale_fill_manual(values = c("#3498DB", "#F39C12", "#18BC9C")) +
   labs(
-    title = "How Threatened Species Counts Differ Across the Top 3 Plastic Types",
+    title = "Figure 4: How Threatened Species Counts Differ Across the Top 3 Plastic Types",
     subtitle = "Each country is weighted by how much of that plastic it collected",
     x = "Threatened Species Count (log scale)",
     y = "Plastic Type"
@@ -549,6 +965,9 @@ population_plastics |>
   )
 ```
 
+Figure 4 shows the distribution of threatened species counts across the three most commonly collected plastic types: PET, LDPE, and PP, where each country is weighted by how much of that plastic it collected. The PET ridge is centered around 100-500 threatened species, suggesting that PET plastic is predominantly collected in countries with relatively lower biodiversity level. The LDPE ridge shows a similar distribution but is slightly broader, indicating more variability. Lastly, PP ridge is shifted furthest to the right, peaking around 1,000 threatened species, suggesting that PP plastic is more commonly collected in countries with higher biodiversity level. This pattern is consistent with the findings from Table 7 and Figure 3, further supporting the idea that plastic type composition is associated with a country's ecological richness.
+
+# Data Model
 ```{r}
 pet_model <- population_plastics |>
   filter(parent_company == "Grand Total",
@@ -568,14 +987,15 @@ anova(pet_model) |>
   mutate(
     pct_variance = sumsq / sum(sumsq) * 100,
     term = recode(term,
-      "volunteers"               = "Volunteers",
-      "forested_area"            = "Forested Area",
-      "log(threatened_species)"  = "Threatened Species (log)",
-      "log(gdp_per_capita)"      = "GDP Per Capita (log)",
-      "Residuals"                = "Unexplained")
+      "volunteers" = "Volunteers",
+      "forested_area" = "Forested Area",
+      "log(threatened_species)" = "Threatened Species (log)",
+      "log(gdp_per_capita)" = "GDP Per Capita (log)",
+      "Residuals" = "Unexplained")
   ) |>
   select(term, df, sumsq, pct_variance, statistic, p.value) |>
   gt() |>
+  tab_caption("Table 8: ANOVA results predicting PET plastic proportion from ecological and economic predictors") |>
   tab_header(
     title = "What Predicts PET Plastic Proportion?",
     subtitle = "Variance in PET proportion partitioned across ecological, economic and volunteer predictors"
@@ -613,3 +1033,5 @@ anova(pet_model) |>
            " · n = ", nobs(pet_model))
   )
 ```
+
+After investigating PET, which had the strongest relationship with forest coverage and threatened species out of the plastics in the dataset, we found that the number of threatened species explains 12.5% of the variation in PET proportion (F = 5.841, p = 0.0209). The coefficient of -0.1325 indicates that as the number of threatened species goes up, PET proportion goes down. This aligns with our findings from Figure 3 and goes to show how the industrialization of a country has a definitive impact on its plastic waste output. Forested area showed a similar negative trend (coefficient = -0.0042, p = 0.0794), though the relationship wasn't quite statistically significant. Together, the model explains about 23% of the variation in PET proportion, leaving most of the variance unexplained by these predictors. So circling back to our research question, it seems that forested area percentage and number of threatened species do affect the distribution of plastic, particularly PET proportion.
