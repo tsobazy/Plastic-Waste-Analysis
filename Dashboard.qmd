@@ -6,7 +6,7 @@ format:
     scrolling: true
     orientation: rows
     theme: flatly
-    logo: images/logo.png
+    logo: www/logo.png
     nav-buttons:
       - icon: envelope
         href: mailto:nlee174@calpoly.edu
@@ -131,14 +131,16 @@ gt_style <- function(gt_obj) {
 
 ## Row 1 {height="750px"}
 
-### Bubble Plot {width="70%" .tabset}
+### Bubble Plot {.tabset width="70%"}
 
 #### Overview
 
 ![](https://trashhero.org/wp-content/uploads/2019/10/75166929_1337270093146099_2568898103847419904_o.jpg)
 
 <p style="color: gray; font-size: 0.9em; font-style: italic;">
-Volunteers participate in a global plastic waste cleanup and brand audit. Image source: Break Free From Plastic, "Branded Vol. II: Identifying the World's Top Corporate Plastic Polluters," via Trash Hero World: https://trashhero.org/worlds-top-polluters-revealed-by-break-free-from-plastics-2019-brand-audit/.
+
+Volunteers participate in a global plastic waste cleanup and brand audit. Image source: Break Free From Plastic, "Branded Vol. II: Identifying the World's Top Corporate Plastic Polluters," via Trash Hero World: <https://trashhero.org/worlds-top-polluters-revealed-by-break-free-from-plastics-2019-brand-audit/.>
+
 </p>
 
 Every year, thousands of volunteers around the world collect plastic waste as part of the Break Free From Plastic (BFFP) movement, a global initiative working to stop plastic pollution at its source and hold companies accountable for the waste they produce. The data they gather not only quantifies the scale of plastic pollution, but also reveals how geography shapes the types of waste found across different regions. Using audit data from 2019–2020 across a range of countries, we investigated whether country-level environmental indicators, including forest coverage and threatened-species count, are associated with which types of plastic dominate a country's waste stream.
@@ -196,9 +198,10 @@ output$bubble_plot <- renderPlotly({
           marker = list(opacity = 0.7, sizemode = "diameter", sizeref = 3)
   ) |>
     layout(
+      text = paste0("Plastic Distribution of Countries Based on ", y_label),
       xaxis = list(title = "Total Plastic Collected (log scale)",
                    type = "log", range = c(0, 6)),
-      yaxis = list(title = y_label),
+      yaxis = list(title = ""),
       margin = list(l = 60, r = 30, t = 20, b = 40),
       showlegend = FALSE
     ) |>
@@ -238,11 +241,12 @@ list(
 
 ## Row 2
 
-### Summary Table
+### Plastic Composition by Environmental Tier
+
+::: panel-tabset
+#### Threatened-Species Tier
 
 ```{r}
-#| title: "Plastic Composition by Threatened-Species Tier"
-
 population_plastics |>
   filter(
     parent_company == "Grand Total",
@@ -277,7 +281,7 @@ population_plastics |>
   ) |>
   gt() |>
   cols_label(
-    threatened_species_level = "Threatened-Species Tier",
+    threatened_species_level = "Threatened Species Tier",
     n_countries = "Countries",
     avg_pet  = "PET",
     avg_hdpe = "HDPE",
@@ -288,9 +292,64 @@ population_plastics |>
     avg_o    = "Other"
   ) |>
   fmt_percent(columns = avg_pet:avg_o, decimals = 1) |>
+  tab_spanner(label = "Category Metrics", columns = threatened_species_level:n_countries) |>
   tab_spanner(label = "Average Plastic Proportion", columns = avg_pet:avg_o) |>
   gt_style()
 ```
+
+#### Forest Coverage
+
+```{r}
+population_plastics |>
+  filter(
+    parent_company == "Grand Total",
+    grand_total > 0,
+    !is.na(threatened_species),
+    !is.na(forested_area)
+  ) |>
+  mutate(
+    pet_prop  = pet  / grand_total,
+    hdpe_prop = hdpe / grand_total,
+    ldpe_prop = ldpe / grand_total,
+    pp_prop   = pp   / grand_total,
+    ps_prop   = ps   / grand_total,
+    pvc_prop  = pvc  / grand_total,
+    o_prop    = o    / grand_total,
+    forested_area_level = cut(forested_area,
+                      breaks = c(0, 16.7, 32.1, Inf),
+                      labels = c("Low (< 16.7)",
+                                 "Medium (16.7-32.1)",
+                                 "High (> 32.1)"))
+  ) |>
+  group_by(forested_area_level) |>
+  summarize(
+    n_countries = n_distinct(country),
+    avg_pet  = mean(pet_prop,  na.rm = TRUE),
+    avg_hdpe = mean(hdpe_prop, na.rm = TRUE),
+    avg_ldpe = mean(ldpe_prop, na.rm = TRUE),
+    avg_pp   = mean(pp_prop,   na.rm = TRUE),
+    avg_ps   = mean(ps_prop,   na.rm = TRUE),
+    avg_pvc  = mean(pvc_prop,  na.rm = TRUE),
+    avg_o    = mean(o_prop,    na.rm = TRUE)
+  ) |>
+  gt() |>
+  cols_label(
+    forested_area_level = "Forested Area Tier",
+    n_countries = "Countries",
+    avg_pet  = "PET",
+    avg_hdpe = "HDPE",
+    avg_ldpe = "LDPE",
+    avg_pp   = "PP",
+    avg_ps   = "PS",
+    avg_pvc  = "PVC",
+    avg_o    = "Other"
+  ) |>
+  fmt_percent(columns = avg_pet:avg_o, decimals = 1) |>
+  tab_spanner(label = "Category Metrics", columns = forested_area_level:n_countries) |>
+  tab_spanner(label = "Average Plastic Proportion", columns = avg_pet:avg_o) |>
+  gt_style()
+```
+:::
 
 # Plots
 
@@ -364,7 +423,7 @@ output$ridge_plot <- renderPlot({
 
 ### Bar Charts {width="50%"}
 
-::: {.panel-tabset}
+::: panel-tabset
 #### Low Coverage
 
 ```{r}
@@ -471,8 +530,10 @@ Other: {round(avg_o * 100, 2)}%"))) +
 
 ggplotly(high5_forest, tooltip = "text")
 ```
-
 :::
+
+The plastic distributions are approximately the same, as the density ridge plots show roughly the same shapes. The PP plastic type stands out the most, with the most flat shape meaning the most even distribution. The leading plastics shown in the bar plots are mostly PET. An interesting find here is how low forest coverage countries tend to have PET as their leading plastic type.
+
 # India
 
 ```{r}
@@ -558,8 +619,8 @@ list(
 
 ### Column 1
 
-::: {.card}
-India has a high forested area and threatened species count. Also, they have the most complete and distributed plastic profile in the data.
+::: card
+India has a high forested area and threatened species count. Also, they have the most complete and distributed plastic profile in the data. Due to these reasons of being the most complete and having outstanding environmental statistics, we chose to focus on India. Specifically, we looked at plastic waste data within each sub region. Certain regions had more plastic generated than others, so allocating more resources towards these places will help not only human population, but also help maintain the species that are threatened and keep the forest areas clean. Our hope is to have the high threatened species count (1,118) and forested area percentage (23.8%) stay as is as long as possible.
 
 ```{r}
 #| label: bar chart for India plastic breakdown
@@ -615,7 +676,7 @@ pal <- colorNumeric("RdPu", domain = india_df$waste_2018_19, na.color = "#cccccc
 
 leaflet(india_df) |>
   addProviderTiles(providers$CartoDB.Positron) |>
-  setView(lng = 90, lat = 22, zoom = 3.5) |>
+  setView(lng = 90, lat = 22, zoom = 4.2) |>
   addPolygons(fillColor = ~pal(waste_2018_19),
               fillOpacity = 0.8,
               color = "black",
