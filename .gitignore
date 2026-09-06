@@ -27,8 +27,6 @@ vignettes/*.pdf
 *.knit.md
 # R Environment Variables
 .Renviron
-# pkgdown site
-docs/
 # translation temp files
 po/*~
 # RStudio Connect folder
@@ -39,6 +37,9 @@ rsconnect/
 *.html
 *_files/
 Report.rmarkdown
+
+# ...except the published report, served by GitHub Pages from /docs
+!docs/index.html
 
 # --- macOS ---
 .DS_Store
